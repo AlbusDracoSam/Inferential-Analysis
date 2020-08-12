@@ -1,0 +1,205 @@
+---
+title: "Inferential Data Analysis"
+author: "Ajith Sam"
+date: "19/07/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+In this project we're going to analyze the ToothGrowth data in the R datasets package.
+
+1. Load the ToothGrowth data and perform some basic exploratory data analyses
+
+2.Provide a basic summary of the data.
+
+3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.
+
+4.State your conclusions and the assumptions needed for your conclusions.
+
+## Data Summary
+
+```{r , cache=TRUE}
+library(datasets)
+data(ToothGrowth)
+head(ToothGrowth)
+```
+
+```{r , cache=TRUE}
+str(ToothGrowth)
+#Variable "dose" conversion (numeric to factor):
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+str(ToothGrowth)
+```
+
+```{r , cache=TRUE}
+#Data Visualization
+hist(ToothGrowth$len, col = "gray",main = "Histogram of Tooth Growth",
+     xlab = "Length (mm)",ylab = "Frequency")
+```
+
+## Exploratory Data Analysis
+
+```{r , cache=TRUE}
+summary(ToothGrowth)
+```
+
+```{r , cache=TRUE}
+#Breakdown of supplement types vs dosage levels:
+table(ToothGrowth$dose, ToothGrowth$supp)
+```
+
+```{r , cache=TRUE}
+library(ggplot2)
+
+#Visualization (Supplement type):
+suppTyp <- ggplot(aes(x=supp, y=len), data=ToothGrowth) + geom_boxplot(aes(fill=supp))
+suppTyp <- suppTyp + labs(title = "Supplement Type Boxplot")
+suppTyp <- suppTyp + xlab("Supplement Type")
+suppTyp <- suppTyp + ylab("Tooth Length")
+suppTyp <- suppTyp + labs(fill = "Color Key")
+suppTyp
+```
+
+```{r , cache=TRUE}
+#Supplement type boxplot mean and range:
+suppTypMean = split(ToothGrowth$len, ToothGrowth$supp)
+sapply(suppTypMean, mean)
+```
+
+```{r , cache=TRUE}
+sapply(suppTypMean, range)
+```
+
+```{r , cache=TRUE}
+# Dosage level
+dsg <- ggplot(aes(x = dose, y = len), data = ToothGrowth) + geom_boxplot(aes(fill = dose))
+dsg <- dsg + labs(title = "Dosage Level Boxplot")
+dsg <- dsg + xlab("Dosage Level")
+dsg <- dsg + ylab("Tooth Length")
+dsg <- dsg + labs(fill = "Color Key")
+dsg
+```
+
+```{r , cache=TRUE}
+#Dosage level boxplot mean and range:
+dsgMean = split(ToothGrowth$len, ToothGrowth$dose)
+sapply(dsgMean, mean)
+```
+
+```{r , cache=TRUE}
+sapply(dsgMean, range)
+```
+
+SYNOPSIS : The statistical summary shows that average length of tooth growth over all the observations is 18.81mm between the range of 4.2mm and 33.9mm. We can also note from the statistical summary and breakdown of supplement types vs dosage levels that the amounts of each supplement and dosage were equally distributed across the 60 observations. 
+
+From the boxplots, mean, and range calculations presented above, the range of values for supplement types orange juice (OJ) and ascorbic acid (VC) are 8.2, 30.9, 4.2, 33.9mm respectively, denoting not much of a variance. Similarly, from the dosage level boxplot, we see increasing averages of 10.61, 19.73, 26.10mm for the 0.5, 1.0, & 2.0mg level dosages respectively as well as ever increasing range levels signifying a stronger factor relationship.
+
+In summation, by comparing these two boxplots to each other, their respective means, and range levels one initially observes that dosage level factors more significantly than supplement type in overall tooth growth. In order to test this theory, hypothesis tests will be conducted below.
+
+## Hypothesis Test
+
+**Supplement Type**
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of supplement type: 
+t.test(len ~ supp, data = ToothGrowth)
+```
+
+~ Fail to reject the null hypothesis, supplement delivery type is not correlated to tooth growth.
+
+**Dosage Level**
+
+```{r , cache=TRUE}
+#Group subsetting prep for dosage level hypothesis tests:
+dsgPt5vs1 <- subset (ToothGrowth, dose %in% c(0.5, 1.0)) 
+dsgPt5vs2 <- subset (ToothGrowth, dose %in% c(0.5, 2.0)) 
+dsg1vs2 <- subset (ToothGrowth, dose %in% c(1.0, 2.0)) 
+```
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of dosage levels - 0.5 vs 1.0:
+t.test(len ~ dose, data = dsgPt5vs1)
+```
+
+~ Reject the null, accept the alternative hypothesis, dosage level 0.5 vs 1.0 is correlated to tooth growth.
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of dosage levels - 0.5 vs 2.0:
+t.test(len ~ dose, data = dsgPt5vs2)
+```
+
+~ Reject the null, accept the alternative hypothesis, dosage level 0.5 vs 2.0 is correlated to tooth growth.
+
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of dosage levels - 1.0 vs 2.0:
+t.test(len ~ dose, data = dsg1vs2)
+```
+
+~ Reject the null, accept the alternative hypothesis, dosage level 1.0 vs 2.0 is correlated to tooth growth.
+
+
+**Supplement Type and Dosage Level**
+
+```{r , cache=TRUE}
+#Group subsetting prep for supplement type and dosage level hypothesis tests:
+dsgPt5 <- subset (ToothGrowth, dose == 0.5) 
+dsg1 <- subset (ToothGrowth, dose == 1.0)
+dsg2 <- subset (ToothGrowth, dose == 2.0)
+```
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of supplement type and dosage level 0.5:
+t.test(len ~ supp, data = dsgPt5)
+```
+
+~ Reject the null, accept the alternative hypothesis, supplement type and dosage level 0.5 is correlated to tooth growth.
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of supplement type and dosage level 1.0:
+t.test(len ~ supp, data = dsg1)
+```
+
+~ Reject the null, accept the alternative hypothesis, supplement type and dosage level 1.0 is correlated to tooth growth.
+
+```{r , cache=TRUE}
+#Hypothesis test to check factor significance of supplement type and dosage level 2.0:
+t.test(len ~ supp, data = dsg2)
+```
+
+
+~ Fail to reject the null hypothesis, supplement type and dosage level 2.0 is not correlated to tooth growth.
+
+SYNOPSIS - Reject/do not reject hypothesis conclusions provided at the end of each hypothesis test above
+
+
+## Conclusion
+
+Given the following assumptions:
+
+ 1. The 60 guinea pigs observed were chosen at random
+
+ 2. The 60 guinea pigs observed are a representative sample of the population
+
+ 3. The supplement types and dosage levels were distributed equally and within a controlled environment, e.g. the same supplement type and dosage level combination, of the 6 variations, was provided to the same guinea pig initially and then repeatedly over the timeframe of the study
+
+We conclude from the analysis that:
+
+ 1. Initially, our exploratory data analysis indicated that supplement delivery type was not a significant factor in tooth growth
+
+ 2. Both the exploratory data analysis and hypothesis tests concluded that dosage levels are a significant factor in tooth growth, with greater dosages providing for higher growth levels, all else equal
+
+ 3. Finally, our initial observation that supplement delivery type is not a significant factor, was proven false. The combined supplement type and dosage levels of 0.5 and 1.0mg, respectively, are significant.
+
+ 4. However, at the supplement type and dosage level of 2.0mg, it is not. I.e., supplement delivery type at the 0.5 and 1mg dosage levels factors significantly in tooth growth, while at higher levels (2mg), it does not.
+
+
+
+
